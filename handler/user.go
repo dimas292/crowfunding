@@ -17,10 +17,6 @@ func NewUserHanlder (userService user.Service) *userHandler{
 }
 
 func (h userHandler) RegisterUser(c *gin.Context){
-	// tangkap input dari user
-	// map input dari user ke struct registerinput
-	// struct di atas kita passing ke parameter service
-
 	var input user.RegisterUserInput
 	
 	err := c.ShouldBindJSON(&input)
@@ -52,4 +48,42 @@ func (h userHandler) RegisterUser(c *gin.Context){
 	response := helper.APIResponse("Account has been register!", http.StatusOK, "success", userFormatter)
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *userHandler) Login(c *gin.Context){
+	
+	var input user.LoginUserInput
+	
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Register Account failed", http.StatusUnprocessableEntity, "error", errorMessage)
+
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	loggedinUser, err := h.service.Login(input)
+
+	
+	if err != nil {
+		
+		errorMessage := gin.H{"errors": err.Error()}
+		
+		response := helper.APIResponse("Login Account failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	formatUser := user.FormatterUser(loggedinUser, "tokentokentoken")
+
+
+	response := helper.APIResponse("Successfuly Login", http.StatusOK, "success", formatUser)
+
+	c.JSON(http.StatusOK, response)
+
+	
 }
