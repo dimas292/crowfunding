@@ -1,8 +1,10 @@
 package main
 
 import (
+	"confunding/auth"
 	"confunding/handler"
 	"confunding/user"
+
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -21,11 +23,14 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	userHandler := handler.NewUserHanlder(userService)
+	authService := auth.NewService()
+
+	userHandler := handler.NewUserHanlder(userService, authService)
+
 	router := gin.Default()
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
-	api.POST("/sessios", userHandler.Login)
+	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", userHandler.UploadAvatar)
 	router.Run()

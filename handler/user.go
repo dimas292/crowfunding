@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"confunding/auth"
 	"confunding/helper"
 	"confunding/user"
 	"fmt"
@@ -11,10 +12,11 @@ import (
 
 type userHandler struct {
 	service user.Service
+	authService auth.Service
 }
 
-func NewUserHanlder (userService user.Service) *userHandler{
-	return &userHandler{userService}
+func NewUserHanlder (userService user.Service, authService auth.Service) *userHandler{
+	return &userHandler{userService, authService}
 }
 
 func (h userHandler) RegisterUser(c *gin.Context){
@@ -35,17 +37,21 @@ func (h userHandler) RegisterUser(c *gin.Context){
 	}
 	newUser, err := h.service.RegisterUser(input)
 
-	userFormatter := user.FormatterUser(newUser, "tokentokentokentoken")
-
-
-
 	if err != nil {
 		response := helper.APIResponse("Register Account failed", http.StatusBadRequest, "error", nil)
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
-	
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		response := helper.APIResponse("Register Account failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	userFormatter := user.FormatterUser(newUser, token)
+
 	response := helper.APIResponse("Account has been register!", http.StatusOK, "success", userFormatter)
 
 	c.JSON(http.StatusOK, response)
@@ -79,7 +85,15 @@ func (h *userHandler) Login(c *gin.Context){
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	formatUser := user.FormatterUser(loggedinUser, "tokentokentoken")
+	
+	token, err := h.authService.GenerateToken(loggedinUser.ID)
+	if err != nil {
+		response := helper.APIResponse("Login Account failed", http.StatusBadRequest, "error", nil)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatUser := user.FormatterUser(loggedinUser, token)
 
 
 	response := helper.APIResponse("Successfuly Login", http.StatusOK, "success", formatUser)
@@ -134,13 +148,6 @@ func (h *userHandler) CheckEmailAvailability(c *gin.Context){
 }
 
 func (h *userHandler) UploadAvatar(c *gin.Context){
-	//input dari user 
-	// simpan gambarny di folder "images"
-	// di service panggil repo
-	// JWT (sementara hardcode) menggunakan id = 1
-	// ambil data user id = 1
-	// repo updated data user simpan lokasi file
-
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		data := gin.H{
