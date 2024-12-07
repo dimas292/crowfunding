@@ -4,9 +4,7 @@ import (
 	"confunding/auth"
 	"confunding/handler"
 	"confunding/user"
-
 	"log"
-
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -24,7 +22,6 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
-
 	userHandler := handler.NewUserHanlder(userService, authService)
 
 	router := gin.Default()
