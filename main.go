@@ -1,7 +1,6 @@
 package main
 
 import (
-
 	"confunding/handler"
 	"confunding/user"
 	"log"
@@ -21,7 +20,6 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
-
 	userService := user.NewService(userRepository)
 	userHandler := handler.NewUserHanlder(userService)
 	router := gin.Default()
@@ -29,6 +27,7 @@ func main() {
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessios", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
+	api.POST("/avatars", userHandler.UploadAvatar)
 	router.Run()
 
 }
