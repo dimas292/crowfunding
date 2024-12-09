@@ -28,22 +28,16 @@ func main() {
 
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
-
-	campaigns, err := campaignRepository.FindAll()
-	if err != nil {
-		fmt.Println("id tidak add")
+	userService := user.NewService(userRepository)
+	campaignService := campaign.NewService(campaignRepository)
+	campaigns, err := campaignService.GetCampaigns(17)
+	if err != nil{
+		fmt.Println("error")
 		return
 	}
 
-	for _, campaign := range campaigns {
-		fmt.Println(campaign.Name)
-		if len(campaign.CampaignImages) > 0 {
-			fmt.Println(campaign.CampaignImages[0].FileName)
-		}
+	fmt.Println(len(campaigns))
 
-	}
-
-	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 	userHandler := handler.NewUserHanlder(userService, authService)
 
@@ -112,11 +106,3 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 
 }
 
-
-
-
-
-// ambil nilai header authorization : Bearer 
-// dari header authorition ambil nilai token saja
-// validasi token 
-// kita ambil user_id  
