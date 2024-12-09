@@ -19,7 +19,7 @@ func NewUserHanlder (userService user.Service, authService auth.Service) *userHa
 	return &userHandler{userService, authService}
 }
 
-func (h userHandler) RegisterUser(c *gin.Context){
+func (h *userHandler) RegisterUser(c *gin.Context){
 	var input user.RegisterUserInput
 	
 	err := c.ShouldBindJSON(&input)
