@@ -2,9 +2,11 @@ package main
 
 import (
 	"confunding/auth"
+	"confunding/campaign"
 	"confunding/handler"
 	"confunding/helper"
 	"confunding/user"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -25,6 +27,22 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
+
+	campaigns, err := campaignRepository.FindAll()
+	if err != nil {
+		fmt.Println("id tidak add")
+		return
+	}
+
+	for _, campaign := range campaigns {
+		fmt.Println(campaign.Name)
+		if len(campaign.CampaignImages) > 0 {
+			fmt.Println(campaign.CampaignImages[0].FileName)
+		}
+
+	}
+
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 	userHandler := handler.NewUserHanlder(userService, authService)
