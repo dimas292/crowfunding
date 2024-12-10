@@ -1,6 +1,9 @@
 package campaign
 
-import "time"
+import (
+	"confunding/user"
+	"time"
+)
 
 type Campaign struct {
 	ID               int
@@ -15,7 +18,8 @@ type Campaign struct {
 	Slug             string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
-	CampaignImages 	[]CampaignImage
+	CampaignImages   []CampaignImage
+	User             user.User
 }
 
 type CampaignImage struct {
