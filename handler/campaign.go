@@ -72,11 +72,6 @@ func(h *campaignHandler) GetCampaign(c *gin.Context){
 	c.JSON(http.StatusOK, response)
 }
 
-// tangkap parameter dari user ke input struck 
-// ambil current user dari jwt/handler
-// panggil service parameter input struct dan juga buat slug 
-// repository untuk simpan data campaign 
-
 func(h *campaignHandler) CreateCampaign(c *gin.Context){
 	var input campaign.CreateCampaignInput
 
@@ -109,5 +104,46 @@ func(h *campaignHandler) CreateCampaign(c *gin.Context){
 
 	c.JSON(http.StatusOK, response)
 
+
+}
+
+func(h *campaignHandler) UpdateCampaign(c *gin.Context){
+	var inputID campaign.GetCampaignDetailInput
+	
+	err := c.ShouldBindUri(&inputID)
+	if err != nil {
+		response := helper.APIResponse("Fail to update campaign", http.StatusBadRequest, "error", nil)
+		
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	var inputData campaign.CreateCampaignInput
+	
+	err = c.ShouldBind(&inputData)
+
+	if err != nil {
+		response := helper.APIResponse("Fail to update campaign", http.StatusBadRequest, "error", nil)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	currentUser := c.MustGet("currentUser").(user.User)
+	inputData.User = currentUser
+
+	updatedCampaign, err := h.service.UpdateCampaign(inputID, inputData)
+	if err != nil {
+		response := helper.APIResponse("Fail to update campaign", http.StatusBadRequest, "error", nil)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+
+	response := helper.APIResponse("Succes Update Campaign", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
+
+	c.JSON(http.StatusOK, response)
+
+	
 
 }
