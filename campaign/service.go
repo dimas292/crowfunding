@@ -3,7 +3,6 @@ package campaign
 import (
 	"errors"
 	"fmt"
-
 	"github.com/gosimple/slug"
 )
 

@@ -100,9 +100,6 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 		}
 		// set context dengan key currentUser dan valuenya user
 		c.Set("currentUser", user)
-
 	}
-
-
 }
 
