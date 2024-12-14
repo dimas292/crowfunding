@@ -4,6 +4,7 @@ import (
 	"confunding/campaign"
 	"confunding/helper"
 	"confunding/user"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -36,18 +37,16 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 
 	formatter := campaign.FormatCampaigs(campaigns)
 
-
 	response := helper.APIResponse("list of campaigns", http.StatusOK, "success", formatter)
 
 	c.JSON(http.StatusOK, response)
 
 }
 
+// campaign details
 
-// campaign details 
-
-func(h *campaignHandler) GetCampaign(c *gin.Context){
-	// hanlder menangkap id dan membuat response formatter 
+func (h *campaignHandler) GetCampaign(c *gin.Context) {
+	// hanlder menangkap id dan membuat response formatter
 	// service menerima id untuk dilanjutkan ke repo
 	// repository membuat find by id
 	var input campaign.GetCampaignDetailInput
@@ -72,7 +71,7 @@ func(h *campaignHandler) GetCampaign(c *gin.Context){
 	c.JSON(http.StatusOK, response)
 }
 
-func(h *campaignHandler) CreateCampaign(c *gin.Context){
+func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	var input campaign.CreateCampaignInput
 
 	err := c.ShouldBindJSON(&input)
@@ -86,7 +85,6 @@ func(h *campaignHandler) CreateCampaign(c *gin.Context){
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-
 
 	currentUser := c.MustGet("currentUser").(user.User)
 
@@ -104,22 +102,21 @@ func(h *campaignHandler) CreateCampaign(c *gin.Context){
 
 	c.JSON(http.StatusOK, response)
 
-
 }
 
-func(h *campaignHandler) UpdateCampaign(c *gin.Context){
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 	var inputID campaign.GetCampaignDetailInput
-	
+
 	err := c.ShouldBindUri(&inputID)
 	if err != nil {
 		response := helper.APIResponse("Fail to update campaign", http.StatusBadRequest, "error", nil)
-		
+
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
 
 	var inputData campaign.CreateCampaignInput
-	
+
 	err = c.ShouldBind(&inputData)
 
 	if err != nil {
@@ -139,11 +136,63 @@ func(h *campaignHandler) UpdateCampaign(c *gin.Context){
 		return
 	}
 
-
 	response := helper.APIResponse("Succes Update Campaign", http.StatusOK, "success", campaign.FormatCampaign(updatedCampaign))
 
 	c.JSON(http.StatusOK, response)
+}
 
-	
+func (h *campaignHandler) UploadCampaignImage(c *gin.Context) {
+	var input campaign.CreateCampaignImageInput
 
+	err := c.ShouldBind(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+
+		errorMessage := gin.H{"errors": errors}
+
+		response := helper.APIResponse("Failed to create campaign", http.StatusUnprocessableEntity, "error", errorMessage)
+
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		data := gin.H{
+			"is_uploaded": false,
+		}
+		response := helper.APIResponse("Failded upload campaign image", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+	userId := currentUser.ID
+	path := fmt.Sprintf("images/%d-%s", userId, file.Filename)
+
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		data := gin.H{
+			"is_uploaded" : false,
+		}
+		response := helper.APIResponse("Failded to upload campaign image", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return 
+	}
+	input.User = currentUser
+	_, err = h.service.SaveCampaignImages(input, path)
+	if err != nil {
+		data := gin.H{
+			"is_uploaded" : false,
+		}
+		response := helper.APIResponse("Failded to upload campaign image", http.StatusBadRequest, "error", data)
+		c.JSON(http.StatusBadRequest, response)
+		return 
+	}
+
+	data := gin.H{
+		"is_uploaded" : true,
+	}
+	response := helper.APIResponse("Image Successfuly Uploaded", http.StatusOK, "success", data)
+	c.JSON(http.StatusOK, response)
 }
