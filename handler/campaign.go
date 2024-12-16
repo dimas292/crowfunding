@@ -46,9 +46,7 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 // campaign details
 
 func (h *campaignHandler) GetCampaign(c *gin.Context) {
-	// hanlder menangkap id dan membuat response formatter
-	// service menerima id untuk dilanjutkan ke repo
-	// repository membuat find by id
+
 	var input campaign.GetCampaignDetailInput
 
 	err := c.ShouldBindUri(&input)

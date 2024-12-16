@@ -5,11 +5,11 @@ import (
 	"confunding/campaign"
 	"confunding/handler"
 	"confunding/helper"
+	"confunding/transaction"
 	"confunding/user"
 	"log"
 	"net/http"
 	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/driver/mysql"
@@ -25,18 +25,25 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	// repository 
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
+	transactionRepository := transaction.NewRepository(db)
+	// service 
 	userService := user.NewService(userRepository)
 	campaignService := campaign.NewService(campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository)
 	authService := auth.NewService()
+	// handler
 	userHandler := handler.NewUserHanlder(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	router := gin.Default()
 	router.Static("/images", "./images")
 	
 	api := router.Group("/api/v1")
+	// users
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/sessions", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
@@ -47,6 +54,8 @@ func main() {
 	api.POST("/campaigns", authMiddleware(authService, userService),campaignHandler.CreateCampaign)
 	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadCampaignImage)
+	// transaction
+	api.GET("/campaign/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactin)
 	router.Run()
 
 }
