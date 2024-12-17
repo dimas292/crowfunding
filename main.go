@@ -7,9 +7,11 @@ import (
 	"confunding/helper"
 	"confunding/transaction"
 	"confunding/user"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/driver/mysql"
@@ -29,6 +31,18 @@ func main() {
 	userRepository := user.NewRepository(db)
 	campaignRepository := campaign.NewRepository(db)
 	transactionRepository := transaction.NewRepository(db)
+	userTransaction, err := transactionRepository.GetByUserID(17)
+	if err != nil {
+		fmt.Println("debug")
+		fmt.Println("debug")
+		fmt.Println("error")
+		return
+	}
+
+	// fmt.Println("data ready with : ", userTransaction)
+	for i, t := range userTransaction {
+		fmt.Println(i, " -> ", t.Campaign.CampaignImages[0].FileName, "->", t.Campaign.Name)
+	}
 	// service 
 	userService := user.NewService(userRepository)
 	campaignService := campaign.NewService(campaignRepository)
@@ -50,12 +64,13 @@ func main() {
 	api.POST("/avatars", authMiddleware(authService, userService),userHandler.UploadAvatar)
 	// campaigns
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
-	api.GET("/campaign/:id", campaignHandler.GetCampaign)
+	api.GET("/campaigns/:id", campaignHandler.GetCampaign)
 	api.POST("/campaigns", authMiddleware(authService, userService),campaignHandler.CreateCampaign)
 	api.PUT("/campaigns/:id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadCampaignImage)
 	// transaction
 	api.GET("/campaign/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactin)
+	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransaction)
 	router.Run()
 
 }
