@@ -9,11 +9,13 @@ import (
 	"confunding/user"
 	"log"
 	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
+	"gorm.io/gorm/logger"
 )
 
 type Config struct {
@@ -32,17 +34,24 @@ func main() {
 		return
 	}
 	
-	db, err := gorm.Open(postgres.Open(config.DSN))
+	db, err := gorm.Open(postgres.Open(config.DSN), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	// auto migration 
 
-	err = db.AutoMigrate(&campaign.Campaign{}, &campaign.CampaignImage{}, &user.User{}, &transaction.Transactions{})
-	if err != nil {
-		panic(err)
+	if err := db.AutoMigrate(&campaign.Campaign{}, &campaign.CampaignImage{}, &user.User{}, &transaction.Transactions{}); err != nil {
+		log.Fatalf("failed to migrate database : %v", err)
 	}
+	
 
 	// repository 
 	userRepository := user.NewRepository(db)

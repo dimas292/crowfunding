@@ -65,6 +65,12 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 		return
 	}
 
+	if campaignDetail.ID == 0 {
+		response := helper.APIResponse("Campaign not found", http.StatusNotFound, "error", nil)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
 	response := helper.APIResponse("campaign detail", http.StatusOK, "success", campaign.FormatCampaignDetail(campaignDetail))
 	c.JSON(http.StatusOK, response)
 }
