@@ -1,2 +1,2 @@
 
-dsn: 'postgresql://blogpost_owner:8mopU7rKZHPW@ep-solitary-voice-a1ta63qq-pooler.ap-southeast-1.aws.neon.tech/blogpost?sslmode=require'
+dsn: 'example'
